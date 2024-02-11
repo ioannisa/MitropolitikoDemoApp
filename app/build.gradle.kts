@@ -68,7 +68,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // https://developer.android.com/jetpack/compose/navigation
-    implementation("androidx.navigation:navigation-compose:2.7.6")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Retrofit for network calls, and GSon for mapping network response JSON to kotlin objects
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

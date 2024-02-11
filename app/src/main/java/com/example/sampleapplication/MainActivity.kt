@@ -1,17 +1,13 @@
 package com.example.sampleapplication
 
-import android.app.Application
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,14 +47,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -67,7 +62,6 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.sampleapplication.network.MoviesService
 import com.example.sampleapplication.ui.theme.SampleApplicationTheme
-import com.example.sampleapplication.utils.JsonParser
 import com.example.sampleapplication.utils.Movie
 import com.example.sampleapplication.utils.MoviesResponse
 import com.example.sampleapplication.utils.NetworkUtils
@@ -80,9 +74,7 @@ import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: MoviesViewModel by viewModels {
-        ViewModelProvider.AndroidViewModelFactory(application)
-    }
+    private val viewModel: MoviesViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -150,6 +142,9 @@ fun MyTopAppBar(title: String? = null, onBackPress: (() -> Unit)? = null) {
 
 @Composable
 fun MoviesListScreen(viewModel: MoviesViewModel, navController: NavHostController) {
+
+    //val context = LocalContext.current
+
     Scaffold(
         topBar = {
             MyTopAppBar(title = "Popular Movies")
@@ -180,9 +175,9 @@ fun MoviesListScreen(viewModel: MoviesViewModel, navController: NavHostControlle
                             .clickable {
                                 navController.navigate("detail/${movie.id}")
 
-//                        Toast
-//                            .makeText(context, "Click ${movie.title}", Toast.LENGTH_LONG)
-//                            .show()
+//                                Toast
+//                                    .makeText(context, "Click ${movie.title}", Toast.LENGTH_LONG)
+//                                    .show()
                             }
                             .background(MaterialTheme.colorScheme.surface)
                             .fillMaxWidth())
@@ -235,7 +230,7 @@ fun MovieDetailsScreen(viewModel: MoviesViewModel, movieId: Int, onNavigateUp: (
                 )
                 Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("${selectedMovie.title}", fontSize = 24.sp)
+                    Text(selectedMovie.title, fontSize = 24.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(" ${selectedMovie.overview}")
                 }
@@ -287,7 +282,7 @@ fun ImageLoader(imagePath: String?, size: NetworkUtils.ImageSize, scale: Content
     val imagePainter = if (!imagePath.isNullOrEmpty()) {
         val imageUrl = NetworkUtils.getImageUrl(imagePath, size)
         val filterQuality = if (size == NetworkUtils.ImageSize.LARGE) { FilterQuality.High } else { FilterQuality.Low }
-        rememberAsyncImagePainter( imageUrl,filterQuality = filterQuality)
+        rememberAsyncImagePainter( imageUrl, filterQuality = filterQuality)
 
     } else {
         painterResource(R.drawable.ic_launcher_foreground)
@@ -326,9 +321,10 @@ fun LoadingIndicator(isLoading: Boolean) {
     }
 }
 
-class MoviesViewModel(application: Application): AndroidViewModel(application) {
+class MoviesViewModel(): ViewModel() {
 
-    private val repository = MoviesRepository(getApplication())
+    private val repository = MoviesRepository()
+
 
     private val _movies = MutableStateFlow<List<Movie>>(emptyList())
     val movies: StateFlow<List<Movie>> = _movies
@@ -342,12 +338,6 @@ class MoviesViewModel(application: Application): AndroidViewModel(application) {
     init {
         //loadMoviesFromFile()
         loadMoviesFromNetwork()
-    }
-
-    private fun loadMoviesFromFile() {
-        viewModelScope.launch {
-            _movies.value = repository.getMoviesFromFile()
-        }
     }
 
     private fun loadMoviesFromNetwork() {
@@ -367,11 +357,7 @@ class MoviesViewModel(application: Application): AndroidViewModel(application) {
     }
 }
 
-class MoviesRepository(private val context: Context) {
-
-    fun getMoviesFromFile(): List<Movie> {
-        return JsonParser.parseMovies(context)
-    }
+class MoviesRepository() {
 
     suspend fun getMoviesFromNetwork(): List<Movie> {
         val response: Response<MoviesResponse> = try {

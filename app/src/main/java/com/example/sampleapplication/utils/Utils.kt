@@ -1,12 +1,7 @@
 package com.example.sampleapplication.utils
 
-import android.content.Context
 import androidx.compose.runtime.Immutable
-import com.example.sampleapplication.R
-import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
-import java.io.BufferedReader
 
 @Immutable
 data class Movie(
@@ -30,19 +25,6 @@ data class Movie(
 data class MoviesResponse(
     @SerializedName("results") val results: List<Movie>
 )
-
-object JsonParser {
-    fun parseMovies(context: Context): List<Movie> {
-        val inputStream = context.resources.openRawResource(R.raw.movies)
-        val bufferedReader = BufferedReader(inputStream.reader())
-        val jsonString = bufferedReader.use { it.readText() }
-
-        val gson = Gson()
-        val responseType = object : TypeToken<MoviesResponse>() {}.type
-        val moviesResponse = gson.fromJson<MoviesResponse>(jsonString, responseType)
-        return moviesResponse.results
-    }
-}
 
 // example movie image:
 // https://image.tmdb.org/t/p/w500/d0OdD1I8qAfETvE9Rp9Voq7R8LR.jpg
